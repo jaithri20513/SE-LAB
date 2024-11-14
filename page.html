@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metro Booking System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: #4a47a3;
+            color: #fff;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        nav {
+            display: flex;
+            gap: 15px;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background 0.3s, color 0.3s;
+        }
+        nav a:hover {
+            background-color: #5a55c6;
+            color: #e2e2ff;
+        }
+
+        /* Section Styles */
+        section {
+            padding: 40px 20px;
+            display: none;
+            text-align: left;
+            animation: fadeIn 0.5s ease;
+        }
+        .section.active {
+            display: block;
+        }
+
+        /* Form Styles */
+        form {
+            max-width: 400px;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="email"], input[type="password"], textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 12px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #3e8e41;
+        }
+
+        /* Options Grid */
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .option {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .option:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Footer Styles */
+        footer {
+            background-color: #4a47a3;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: center;
+            }
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+        }
+
+        /* Keyframes for Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+    <script>
+        let loggedInEmail = ''; // Variable to store the logged-in user's email
+
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        // Test case functions for form submissions
+        function testLoginForm(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            console.log("Login Submitted with email:", email, "and password:", password);
+            loggedInEmail = email; // Store the email of the logged-in user
+            alert("Login successful!");
+            showSection('account');
+        }
+
+        function testCreateAccount(event) {
+            event.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const phone = document.getElementById('signup-phone').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            console.log("Account Created with Name:", name, "Phone:", phone, "Email:", email);
+            alert("Account created successfully!");
+        }
+
+        function testRecharge(event) {
+            event.preventDefault();
+            const cardNumber = document.getElementById('card-number').value;
+            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+            if (cardNumber.length !== 12) {
+                alert("Metro Card Number must be 12 digits.");
+                return;
+            }
+            console.log("Recharge with card number:", cardNumber, "using payment method:", paymentMethod);
+            alert("Recharge successful!");
+        }
+
+        // Feedback Form Test Case
+        function testFeedbackForm(event) {
+            event.preventDefault();
+            const feedbackMessage = document.getElementById('feedback-message').value;
+            console.log("Feedback Submitted:", feedbackMessage);
+            alert("Feedback submitted successfully!");
+        }
+
+        // Contact Us Form Test Case
+        function testContactForm(event) {
+            event.preventDefault();
+            const name = document.getElementById('contact-name').value;
+            const email = document.getElementById('contact-email').value;
+            const message = document.getElementById('contact-message').value;
+            console.log("Contact Form Submitted with Name:", name, "Email:", email, "Message:", message);
+            alert("Message sent successfully!");
+        }
+
+        // Function to update My Account page with the logged-in email
+        function updateAccountPage() {
+            const accountEmailElement = document.getElementById('account-email');
+            if (loggedInEmail) {
+                accountEmailElement.textContent = `Email: ${loggedInEmail}`;
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <header>
+        <h1>Hyderabad Metro Rail</h1>
+        <nav>
+            <a href="#" onclick="showSection('home')">Home</a>
+            <a href="#" onclick="showSection('login')">Login</a>
+            <a href="#" onclick="showSection('create-account')">Create Account</a>
+            <a href="#" onclick="showSection('account'); updateAccountPage();">My Account</a>
+            <a href="#" onclick="showSection('recharge')">Recharge Card</a>
+            <a href="#" onclick="showSection('metro-map')">Metro Map</a>
+            <a href="#" onclick="showSection('metro-stations')">Metro Stations</a>
+            <a href="#" onclick="showSection('journey')">Fare Calculator</a>
+            <a href="#" onclick="showSection('feedback')">Feedback</a>
+            <a href="#" onclick="showSection('contact')">Contact Us</a>
+        </nav>
+    </header>
+
+    <!-- Home Section -->
+    <section id="home" class="section active">
+        <h2>Welcome to Hyderabad Metro</h2>
+        <p>Your smart solution for urban travel. Enjoy a safe, fast, and convenient way to move around the city.</p>
+        <div class="options">
+            <div class="option"><a href="#" onclick="showSection('account')">My Account</a></div>
+            <div class="option"><a href="#" onclick="showSection('recharge')">Recharge Card</a></div>
+            <div class="option"><a href="#" onclick="showSection('metro-map')">Metro Map</a></div>
+            <div class="option"><a href="#" onclick="showSection('metro-stations')">Metro Stations</a></div>
+            <div class="option"><a href="#" onclick="showSection('journey')">Fare Calculator</a></div>
+            <div class="option"><a href="#" onclick="showSection('feedback')">Feedback</a></div>
+            <div class="option"><a href="#" onclick="showSection('contact')">Contact Us</a></div>
+        </div>
+    </section>
+
+    <!-- Login Section -->
+    <section id="login" class="section">
+        <h2>Login</h2>
+        <form id="login-form">
+            <label for="login-email">Email:</label>
+            <input type="email" id="login-email" name="email" required>
+            <label for="login-password">Password:</label>
+            <input type="password" id="login-password" name="password" required>
+            <!-- Error Message Container -->
+            <div id="login-password-error"></div>
+            <button type="submit">Login</button>
+        </form>
+    </section>
+
+    <!-- Create Account Section -->
+    <section id="create-account" class="section">
+        <h2>Create Account</h2>
+        <form id="signup-form">
+            <label for="signup-name">Name:</label>
+            <input type="text" id="signup-name" name="name" required>
+            <label for="signup-phone">Phone:</label>
+            <input type="text" id="signup-phone" name="phone" required>
+            <label for="signup-email">Email:</label>
+            <input type="email" id="signup-email" name="email" required>
+            <label for="signup-password">Password:</label>
+            <input type="password" id="signup-password" name="password" required>
+            <label for="confirm-password">Confirm Password:</label>
+            <input type="password" id="confirm-password" name="confirm-password" required>
+            <!-- Error Message Container -->
+            <div id="create-account-password-error"></div>
+            <button type="submit">Create Account</button>
+        </form>
+    </section>
+    <!-- Recharge Card Section -->
+    <section id="recharge" class="section">
+        <h2>Recharge Your Metro Card</h2>
+        <form onsubmit="testRecharge(event)">
+            <label for="card-number">Metro Card Number (12 digits):</label>
+            <input type="text" id="card-number" name="card-number" maxlength="12" required>
+            <div>
+                <label>
+                    <input type="radio" name="payment" value="credit-card" required> Credit Card
+                </label>
+                <label>
+                    <input type="radio" name="payment" value="debit-card" required> Debit Card
+                </label>
+                <label>
+                    <input type="radio" name="payment" value="net-banking" required> Net Banking
+                </label>
+                <label>
+                    <input type="radio" name="payment" value="upi" required> UPI
+                </label>
+            </div>
+            <button type="submit">Recharge Now</button>
+        </form>
+    </section>
+
+    <!-- Metro Map Section -->
+    <section id="metro-map" class="section">
+        <h2>Hyderabad Metro Map</h2>
+        <img src="https://routemaps.info/images/maps/hyderabad-metro-map.jpg" alt="Hyderabad Metro Map" style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);">
+    </section>
+
+    <!-- Metro Stations Section -->
+    <section id="metro-stations" class="section">
+        <h2>Metro Stations</h2>
+        <img src="https://timesalert.com/wp-content/uploads/2017/12/Hyderabad-Metro-Rail-Stations-List-1024x691.jpg" alt="Hyderabad Metro Stations List" style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);">
+    </section>
+
+    <!-- Fare Calculator Section -->
+<section id="journey" class="section">
+    <h2>Fare Calculator</h2>
+    <p>Calculate your fare based on your journey details.</p>
+    
+    <!-- Fare Calculator Form -->
+    <form onsubmit="calculateFare(event)">
+        <label for="from-station">From Station:</label>
+        <select id="from-station" required>
+            <option value="">Select Station</option>
+            <option value="Ameerpet">Ameerpet</option>
+            <option value="MG Bus-Station">MG Bus Station</option>
+            <option value="Hi-Tech-City">Hi-Tech City</option>
+            <option value="Miyapur">Miyapur</option>
+            <option value="Raidurg">Raidurg</option>
+            <option value="Balanagar">Balanagar</option>
+            <option value="Moosapet">Moosapet</option>
+            <option value="JBS">JBS</option>
+            <option value="Parade Grounds">Parade Grounds</option>
+            <option value="Secunderbad">Secunderbad</option>
+            <option value="Bharat Nagar">Bharat Nagar</option>
+            <option value="SR Nagar">SR Nagar</option>
+            <option value="Nampally">Nampally</option>
+            <option value="Paradise">Paradise</option>
+            <option value="Madhura Nagar">Madhura Nagar</option>
+            <option value="Tarnaka">Tarnaka</option>
+            <option value="Malakpet">Malakpet</option>
+            <option value="ESI Hospital">ESI Hospital</option>
+            <option value="Assembly">Assembly</option>
+            <option value="Dilsukhnagar">Dilsukhnagar</option>
+            <option value="New Market">New Market</option>
+            <option value="Kukatpally">Kukatpally</option>
+            <option value="Erragadda">Erragadda</option>
+            <option value="Khairatabad">Khairatabad</option>
+            <option value="Musarambagh">Musarambagh</option>
+            <option value="Osmania Medical College">Osmania Medical College</option>
+            <option value="Irrum Manzil">Irrum Manzil</option>
+            <option value="Chaitanyapuri">Chaitanyapuri</option>
+            <option value="Victoria Memorial">Victoria Memorial</option>
+            <option value="JNTU College">JNTU College</option>
+            <option value="KPHB Colony">KPHB Colony</option>
+            <option value="Punjaguuta">Punjagutta</option>
+            <option value="Falaknuma">Falaknuma</option>
+            <option value="Charminar">Charminar</option>
+            <option value="Lakdikapul">Lakdikapul</option>
+            <option value="Uppal">Uppal</option>
+            <option value="Prakash Nagar">Prakash Nagar</option>
+            <option value="Yusuf Guda">Yusuf Guda</option>
+            <option value="RTC Cross Roads">RTC Cross Roads</option>
+            <option value="NGRI">NGRI</option>
+            <option value="Mettuguda">Mettuguda</option>
+            <option value="Shamsher Gunj">Shamsher Gunj</option>
+            <option value="Shalibanda">Shalibanda</option>
+            <option value="Sultan Bazar">Sultan Bazar</option>
+            <option value="Gandhi Hospital">Gandhi Hospital</option>
+            <option value="Road No 5 Jubllie Hills">Road No 5 Jubllie Hills</option>
+            <option value="Jubllie Hills Check Post">Jubllie Hills Check Post</option>
+        </select>
+        
+        <label for="to-station">To Station:</label>
+        <select id="to-station" required>
+            <option value="">Select Station</option>
+            <option value="Ameerpet">Ameerpet</option>
+            <option value="MG Bus-Station">MG Bus Station</option>
+            <option value="Hi-Tech-City">Hi-Tech City</option>
+            <option value="Miyapur">Miyapur</option>
+            <option value="Raidurg">Raidurg</option>
+            <option value="Balanagar">Balanagar</option>
+            <option value="Moosapet">Moosapet</option>
+            <option value="JBS">JBS</option>
+            <option value="Parade Grounds">Parade Grounds</option>
+            <option value="Secunderbad">Secunderbad</option>
+            <option value="Bharat Nagar">Bharat Nagar</option>
+            <option value="SR Nagar">SR Nagar</option>
+            <option value="Nampally">Nampally</option>
+            <option value="Paradise">Paradise</option>
+            <option value="Madhura Nagar">Madhura Nagar</option>
+            <option value="Tarnaka">Tarnaka</option>
+            <option value="Malakpet">Malakpet</option>
+            <option value="ESI Hospital">ESI Hospital</option>
+            <option value="Assembly">Assembly</option>
+            <option value="Dilsukhnagar">Dilsukhnagar</option>
+            <option value="New Market">New Market</option>
+            <option value="Kukatpally">Kukatpally</option>
+            <option value="Erragadda">Erragadda</option>
+            <option value="Khairatabad">Khairatabad</option>
+            <option value="Musarambagh">Musarambagh</option>
+            <option value="Osmania Medical College">Osmania Medical College</option>
+            <option value="Irrum Manzil">Irrum Manzil</option>
+            <option value="Chaitanyapuri">Chaitanyapuri</option>
+            <option value="Victoria Memorial">Victoria Memorial</option>
+            <option value="JNTU College">JNTU College</option>
+            <option value="KPHB Colony">KPHB Colony</option>
+            <option value="Punjaguuta">Punjagutta</option>
+            <option value="Falaknuma">Falaknuma</option>
+            <option value="Charminar">Charminar</option>
+            <option value="Lakdikapul">Lakdikapul</option>
+            <option value="Uppal">Uppal</option>
+            <option value="Prakash Nagar">Prakash Nagar</option>
+            <option value="Yusuf Guda">Yusuf Guda</option>
+            <option value="RTC Cross Roads">RTC Cross Roads</option>
+            <option value="NGRI">NGRI</option>
+            <option value="Mettuguda">Mettuguda</option>
+            <option value="Shamsher Gunj">Shamsher Gunj</option>
+            <option value="Shalibanda">Shalibanda</option>
+            <option value="Sultan Bazar">Sultan Bazar</option>
+            <option value="Gandhi Hospital">Gandhi Hospital</option>
+            <option value="Road No 5 Jubllie Hills">Road No 5 Jubllie Hills</option>
+            <option value="Jubllie Hills Check Post">Jubllie Hills Check Post</option>
+        </select>
+        
+        <button type="submit">Calculate Fare</button>
+    </form>
+    
+    <div id="fare-result" style="margin-top: 20px; display: none;">
+        <h3>Fare Result</h3>
+        <p id="fare-message"></p>
+    </div>
+</section>
+
+<script>
+    function calculateFare(event) {
+        event.preventDefault();
+
+        const fromStation = document.getElementById('from-station').value;
+        const toStation = document.getElementById('to-station').value;
+
+        if (!fromStation || !toStation || fromStation === toStation) {
+            alert("Please select valid stations for your journey.");
+            return;
+        }
+
+        // Simple fare calculation (demo purposes)
+        let fare = 0;
+
+        // Example of fare calculation (just a basic demo logic for the sake of this example)
+        if (fromStation === "Miyapur" && toStation === "LB Nagar") {
+            fare = 45; // Example fare in INR
+        } else if (fromStation === "Parade Grounds" && toStation === "Falaknuma") {
+            fare = 30;
+        } else if(fromStation === "Raidurg" && toStation === "Nagole"){
+            fare=40
+        }else{
+            fare = 25;
+        }
+
+        // Show fare result
+        const fareResultDiv = document.getElementById('fare-result');
+        const fareMessage = document.getElementById('fare-message');
+        fareMessage.textContent = `Your fare from ${fromStation} to ${toStation} is ₹${fare}.`;
+        fareResultDiv.style.display = "block";
+
+        alert("Fare calculated successfully!");
+    }
+</script>
+
+
+    <!-- Feedback Section -->
+    <section id="feedback" class="section">
+        <h2>Feedback</h2>
+        <form onsubmit="testFeedbackForm(event)">
+            <textarea id="feedback-message" rows="4" placeholder="Enter your feedback here..." required></textarea>
+            <button type="submit">Submit Feedback</button>
+        </form>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section">
+        <h2>Contact Us</h2>
+        <p> Hyderabad Metro Rail Limited
+            Rasoolpura,Begumpet
+            Hyderabad-500 016.
+        </p>
+        <p>Email: support@hyderabadmetro.com</p>
+        <p>Talk to Us
+            Tel: +91 40 233 88 587/588
+        Fax: +91 40 23388582</p>
+    </section>
+
+    <!-- My Account Section -->
+    <section id="account" class="section">
+        <h2>My Account</h2>
+        <p id="account-name">Name: N/A</p>
+        <p id="account-email">Email: N/A</p>
+        <p id="account-phone">Phone: N/A</p>
+        <p id="account-metro card ">Metro card: N/A</p>
+    </section>
+
+    <!-- Footer Section -->
+    <footer>
+        <p>© 2024 Hyderabad Metro Rail. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        // Password validation functions
+        function validateLoginPassword() {
+            const password = document.getElementById('login-password').value;
+            const errorMessage = document.getElementById('login-password-error');
+            errorMessage.textContent = '';
+    
+            // Test Case 4: Password field is required
+            if (password === '') {
+                errorMessage.textContent = 'Password is required.';
+                return false;
+            }
+    
+            // Test Case 1: Password must be at least 8 characters long
+            if (password.length < 8) {
+                errorMessage.textContent = 'Password must be at least 8 characters long.';
+                return false;
+            }
+            return true;
+        }
+    
+        function validateCreateAccountPassword() {
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorMessage = document.getElementById('create-account-password-error');
+            errorMessage.textContent = '';
+    
+            // Test Case 4: Password field is required
+            if (password === '') {
+                errorMessage.textContent = 'Password is required.';
+                return false;
+            }
+    
+            // Test Case 1: Password must be at least 8 characters long
+            if (password.length < 8) {
+                errorMessage.textContent = 'Password must be at least 8 characters long.';
+                return false;
+            }
+    
+            // Test Case 2: Password must contain at least one uppercase letter, one lowercase letter, and one digit
+            const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+            if (!passwordPattern.test(password)) {
+                errorMessage.textContent = 'Password must contain at least one uppercase letter, one lowercase letter, and one digit.';
+                return false;
+            }
+    
+            // Test Case 3: Password and confirm password must match
+            if (password !== confirmPassword) {
+                errorMessage.textContent = 'Passwords do not match.';
+                return false;
+            }
+    
+            // Test Case 5: Confirm password field is required
+            if (confirmPassword === '') {
+                errorMessage.textContent = 'Confirm password is required.';
+                return false;
+            }
+    
+            return true;
+        }
+    
+        // Event listeners for form submissions
+        document.querySelector("#login-form").addEventListener("submit", function(event) {
+            if (!validateLoginPassword()) {
+                event.preventDefault();
+            }
+        });
+    
+        document.querySelector("#signup-form").addEventListener("submit", function(event) {
+            if (!validateCreateAccountPassword()) {
+                event.preventDefault();
+            }
+        });
+
+        let userData = {}; // Object to store user details
+
+    // Save login details and show account
+    function handleLogin(event) {
+        event.preventDefault();
+        const email = document.getElementById('login-email').value;
+        if (validateLoginPassword()) {
+            userData.email = email;
+            alert("Login successful!");
+            showSection('account');
+            updateAccountPage();
+        }
+    }
+
+    // Save signup details and show account
+    function handleCreateAccount(event) {
+        event.preventDefault();
+        const email = document.getElementById('signup-email').value;
+        const name = document.getElementById('signup-name').value;
+        if (validateCreateAccountPassword()) {
+            userData.name = name;
+            userData.email = email;
+            alert("Account created successfully!");
+            showSection('account');
+            updateAccountPage();
+        }
+    }
+
+    // Display user details on My Account page
+    function updateAccountPage() {
+        document.getElementById('account-name').textContent = `Name: ${userData.name || 'N/A'}`;
+        document.getElementById('account-email').textContent = `Email: ${userData.email || 'N/A'}`;
+    }
+
+    // Switch between sections
+    function showSection(sectionId) {
+        const sections = document.querySelectorAll('.section');
+        sections.forEach(section => section.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+    }
+
+    document.querySelector("#login-form").addEventListener("submit", handleLogin);
+    document.querySelector("#signup-form").addEventListener("submit", handleCreateAccount);
+
+
+    const users = {}; // Object to store multiple users' details by email
+
+    // Save signup details and ensure the email is unique
+    function handleCreateAccount(event) {
+        event.preventDefault();
+        const email = document.getElementById('signup-email').value;
+        const name = document.getElementById('signup-name').value;
+        const password = document.getElementById('signup-password').value;
+
+        if (users[email]) {
+            alert("An account with this email already exists.");
+            return;
+        }
+
+        if (validateCreateAccountPassword()) {
+            users[email] = { name, password };
+            alert("Account created successfully!");
+            showSection('login'); // Direct the user to the login page after successful sign-up
+        }
+    }
+
+    // Verify login details match a created account
+    function handleLogin(event) {
+        event.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        if (!users[email]) {
+            alert("No account found with this email.");
+            return;
+        }
+
+        if (users[email].password !== password) {
+            alert("Incorrect password.");
+            return;
+        }
+
+        // Store user details for displaying on My Account page
+        userData.name = users[email].name;
+        userData.email = email;
+        alert("Login successful!");
+        showSection('account');
+        updateAccountPage();
+    }
+
+    // Display user details on My Account page
+    function updateAccountPage() {
+        document.getElementById('account-name').textContent = `Name: ${userData.name || 'N/A'}`;
+        document.getElementById('account-email').textContent = `Email: ${userData.email || 'N/A'}`;
+    }
+
+    // Switch between sections
+    function showSection(sectionId) {
+        const sections = document.querySelectorAll('.section');
+        sections.forEach(section => section.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+    }
+
+    document.querySelector("#login-form").addEventListener("submit", handleLogin);
+    document.querySelector("#signup-form").addEventListener("submit", handleCreateAccount);
+    </script>
+    
+</body>
+</html>
